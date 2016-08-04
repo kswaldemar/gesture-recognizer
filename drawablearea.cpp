@@ -4,14 +4,10 @@
 #include <QMouseEvent>
 #include <QStyleOption>
 
-DrawableArea::DrawableArea(QWidget *parent)
-    : QWidget(parent)
-{
-}
+DrawableArea::DrawableArea(QWidget *parent) : QWidget(parent) {}
 
-void DrawableArea::mouseMoveEvent(QMouseEvent *event)
-{
-    //Register points only inside widget
+void DrawableArea::mouseMoveEvent(QMouseEvent *event) {
+    // Register points only inside widget
     if (this->rect().contains(event->pos())) {
         addGesturePoint(event->pos());
         update();
@@ -19,18 +15,15 @@ void DrawableArea::mouseMoveEvent(QMouseEvent *event)
     }
 }
 
-void DrawableArea::mousePressEvent(QMouseEvent *)
-{
+void DrawableArea::mousePressEvent(QMouseEvent *) {
     startNewGestureCapture();
 }
 
-void DrawableArea::mouseReleaseEvent(QMouseEvent *)
-{
+void DrawableArea::mouseReleaseEvent(QMouseEvent *) {
     stopGestureCapture();
 }
 
-void DrawableArea::paintEvent(QPaintEvent *)
-{
+void DrawableArea::paintEvent(QPaintEvent *) {
     QStyleOption opt;
     opt.init(this);
 
@@ -40,7 +33,7 @@ void DrawableArea::paintEvent(QPaintEvent *)
     painter.setPen(pen);
     painter.setRenderHints(QPainter::Antialiasing, true);
 
-    //For applying custom stylesheet
+    // For applying custom stylesheet
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &painter, this);
 
     if (!m_points.empty()) {
@@ -55,24 +48,21 @@ void DrawableArea::paintEvent(QPaintEvent *)
     }
 }
 
-void DrawableArea::startNewGestureCapture()
-{
+void DrawableArea::startNewGestureCapture() {
     m_points.clear();
     m_gestureStarted = true;
     update();
     qDebug() << "Start new gesture capture";
 }
 
-void DrawableArea::addGesturePoint(const QPoint &pt)
-{
+void DrawableArea::addGesturePoint(const QPoint &pt) {
     bool validPoint = m_gestureStarted;
     if (validPoint) {
         m_points.append(pt);
     }
 }
 
-void DrawableArea::stopGestureCapture()
-{
+void DrawableArea::stopGestureCapture() {
     m_gestureStarted = false;
     qDebug() << "Stop gesture capture";
     if (!m_points.empty()) {

@@ -1,13 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
-{
+MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
     m_historyModel = new QStringListModel(this);
-//    m_historyModel->setStringList(some);
 
     ui->gesturesHistory->setModel(m_historyModel);
     ui->gesturesHistory->setEditTriggers(QAbstractItemView::NoEditTriggers);
@@ -18,25 +14,21 @@ MainWindow::MainWindow(QWidget *parent) :
                      this, SLOT(addHistoryEntry(QString)));
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     delete ui;
     delete m_historyModel;
 }
 
-void MainWindow::addHistoryEntry(QString entry)
-{
+void MainWindow::addHistoryEntry(QString entry) {
     m_historyModel->insertRow(m_historyModel->rowCount());
-    QModelIndex index = m_historyModel->index(m_historyModel->rowCount()-1);
+    QModelIndex index = m_historyModel->index(m_historyModel->rowCount() - 1);
     m_historyModel->setData(index, entry);
 }
 
-void MainWindow::on_quitButton_clicked()
-{
+void MainWindow::on_quitButton_clicked() {
     QApplication::quit();
 }
 
-void MainWindow::on_clearHistoryButton_clicked()
-{
+void MainWindow::on_clearHistoryButton_clicked() {
     m_historyModel->setStringList(QStringList());
 }

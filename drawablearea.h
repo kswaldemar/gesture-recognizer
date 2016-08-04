@@ -1,16 +1,15 @@
 #pragma once
 
-#include <QWidget>
-#include <QVector>
-#include <QPoint>
 #include <QPainter>
+#include <QPoint>
+#include <QVector>
+#include <QWidget>
 
 /**
  * @brief Widget for drawing gestures
  * Track mouse when left button pressed and draw lines
  */
-class DrawableArea : public QWidget
-{
+class DrawableArea : public QWidget {
     Q_OBJECT
 public:
     explicit DrawableArea(QWidget *parent = 0);
@@ -59,8 +58,8 @@ signals:
     void gestureCaptured(QVector<QPoint> points);
 
 private:
-    ///Points in the order of drawing
+    /// Points in the order of drawing
     QVector<QPoint> m_points;
-    ///True is we currently capturing gesture
+    /// True is we currently capturing gesture
     bool m_gestureStarted;
 };
