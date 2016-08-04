@@ -8,7 +8,11 @@ DrawableArea::DrawableArea(QWidget *parent) : QWidget(parent) {}
 
 void DrawableArea::mouseMoveEvent(QMouseEvent *event) {
     // Register points only inside widget
-    if (this->rect().contains(event->pos())) {
+    bool isValidPoint = rect().contains(event->pos());
+    if (isValidPoint && !m_points.empty()) {
+        isValidPoint = m_points.back() != event->pos();
+    }
+    if (isValidPoint) {
         addGesturePoint(event->pos());
         update();
         qDebug() << event->pos();

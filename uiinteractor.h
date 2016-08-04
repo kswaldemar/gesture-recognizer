@@ -9,17 +9,17 @@
  */
 class UIInteractor : public QObject {
     Q_OBJECT
-   public:
+public:
     explicit UIInteractor(QObject *parent = 0);
 
-   signals:
+signals:
     /**
      * @brief Emited when new gesture recognized
      * @param description Gesture description in form of string
      */
     void newGestureRegistered(QString description);
 
-   public slots:
+public slots:
     /**
      * @brief Recognize gesture from vector of points
      * @param points Vector of points in the order of drawing
