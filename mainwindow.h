@@ -1,7 +1,6 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
-#include "guihandler.h"
+#include "uiinteractor.h"
 
 #include <QMainWindow>
 #include <QStringListModel>
@@ -19,7 +18,11 @@ public:
     ~MainWindow();
 
 private slots:
-    void addHistoryEntry(QString);
+    /**
+     * @brief Add new entry to gesture history list
+     * @param desc gesture description
+     */
+    void addHistoryEntry(QString desc);
 
     void on_quitButton_clicked();
 
@@ -29,7 +32,5 @@ private:
     Ui::MainWindow *ui;
 
     QStringListModel *m_historyModel;
-    GuiHandler m_ghandler;
+    UIInteractor m_ghandler;
 };
-
-#endif // MAINWINDOW_H

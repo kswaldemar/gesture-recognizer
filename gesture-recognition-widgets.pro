@@ -15,10 +15,10 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     drawablearea.cpp \
-    guihandler.cpp
+    uiinteractor.cpp
 
 HEADERS  += mainwindow.h \
     drawablearea.h \
-    guihandler.h
+    uiinteractor.h
 
 FORMS    += mainwindow.ui
