@@ -18,6 +18,7 @@ HEADERS  += \
     uiinteractor.h
 
 INCLUDEPATH += ../librecog
-LIBS += -L../librecog -lrecog
+LIBS += ../librecog/librecog.a
+PRE_TARGETDEPS += ../librecog/librecog.a
 
 FORMS    += ui/mainwindow.ui

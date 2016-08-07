@@ -93,7 +93,7 @@ void DrawableArea::addGesturePoint(const QPoint &pt) {
 void DrawableArea::stopGestureCapture() {
     m_gestureStarted = false;
     qDebug() << "Stop gesture capture";
-//    qDebug() << "Captured points: " << m_points;
+    qDebug() << "Captured points: " << m_points;
     if (!m_points.empty()) {
         emit gestureCaptured(m_points);
     }

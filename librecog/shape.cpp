@@ -17,8 +17,11 @@ void SLine::draw(QPainter &painter) const {
 }
 
 QString SLine::toString() const {
-    qDebug() << m_pt1 << m_pt2;
-    return "Line ";
+    char buf[100];
+    snprintf(buf, sizeof(buf),
+             "LINE from (%d, %d) to (%d, %d)",
+             m_pt1.x(), m_pt1.y(), m_pt2.x(),m_pt2.y());
+    return buf;
 }
 
 
