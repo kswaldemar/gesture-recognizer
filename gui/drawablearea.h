@@ -1,9 +1,14 @@
 #pragma once
 
+#include "uiinteractor.h"
+
+#include <shape.h>
+
 #include <QPainter>
 #include <QPoint>
 #include <QVector>
 #include <QWidget>
+#include <QColor>
 
 /**
  * @brief Widget for drawing gestures
@@ -50,6 +55,9 @@ protected:
      */
     void stopGestureCapture();
 
+public slots:
+    void setShape(PShape shape);
+
 signals:
     /**
      * @brief Emited when gesture registered and ready to further processing
@@ -58,8 +66,13 @@ signals:
     void gestureCaptured(QVector<QPoint> points);
 
 private:
+    void drawGesture(QPainter &painter);
+    void drawShape(QPainter &painter);
+
     /// Points in the order of drawing
     QVector<QPoint> m_points;
+    /// Recognized shape to draw
+    PShape m_shape;
     /// True is we currently capturing gesture
     bool m_gestureStarted;
 };

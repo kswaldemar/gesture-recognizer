@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "uiinteractor.h"
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWindow) {
     ui->setupUi(this);
@@ -10,8 +11,10 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent), ui(new Ui::MainWi
 
     QObject::connect(ui->drawArea, SIGNAL(gestureCaptured(QVector<QPoint>)),
                      &m_ghandler, SLOT(processGesture(QVector<QPoint>)));
-    QObject::connect(&m_ghandler, SIGNAL(newGestureRegistered(QString)),
-                     this, SLOT(addHistoryEntry(QString)));
+    QObject::connect(&m_ghandler, SIGNAL(newGestureRegistered(PShape)),
+                     this, SLOT(addShapeToHistory(PShape)));
+    QObject::connect(&m_ghandler, SIGNAL(newGestureRegistered(PShape)),
+                     ui->drawArea, SLOT(setShape(PShape)));
 }
 
 MainWindow::~MainWindow() {
@@ -19,10 +22,10 @@ MainWindow::~MainWindow() {
     delete m_historyModel;
 }
 
-void MainWindow::addHistoryEntry(QString entry) {
+void MainWindow::addShapeToHistory(PShape desc) {
     m_historyModel->insertRow(m_historyModel->rowCount());
     QModelIndex index = m_historyModel->index(m_historyModel->rowCount() - 1);
-    m_historyModel->setData(index, entry);
+    m_historyModel->setData(index, desc->toString());
 }
 
 void MainWindow::on_quitButton_clicked() {

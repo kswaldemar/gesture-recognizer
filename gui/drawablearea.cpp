@@ -1,10 +1,21 @@
 #include "drawablearea.h"
 
+#include <shape.h>
+
 #include <QDebug>
 #include <QMouseEvent>
 #include <QStyleOption>
 
-DrawableArea::DrawableArea(QWidget *parent) : QWidget(parent) {}
+
+/*
+ * Some global variables
+ */
+const QColor GESTURE_COLOR = "blue";
+const QColor SHAPE_COLOR = "red";
+const int PEN_WIDTH = 2;
+
+
+DrawableArea::DrawableArea(QWidget *parent) : QWidget(parent), m_shape(NULL) {}
 
 void DrawableArea::mouseMoveEvent(QMouseEvent *event) {
     // Register points only inside widget
@@ -15,7 +26,6 @@ void DrawableArea::mouseMoveEvent(QMouseEvent *event) {
     if (isValidPoint) {
         addGesturePoint(event->pos());
         update();
-        qDebug() << event->pos();
     }
 }
 
@@ -27,33 +37,47 @@ void DrawableArea::mouseReleaseEvent(QMouseEvent *) {
     stopGestureCapture();
 }
 
+void DrawableArea::drawGesture(QPainter &painter) {
+    QVector<QPoint>::iterator it1 = m_points.begin();
+    QVector<QPoint>::iterator it2 = it1;
+    ++it2;
+    while (it2 != m_points.end()) {
+        painter.drawLine(*it1, *it2);
+        it1 = it2;
+        ++it2;
+    }
+}
+
+void DrawableArea::drawShape(QPainter &painter) {
+    m_shape->draw(painter);
+}
+
 void DrawableArea::paintEvent(QPaintEvent *) {
     QStyleOption opt;
     opt.init(this);
 
-    QColor color("blue");
-    QPen pen(color, 2);
     QPainter painter(this);
-    painter.setPen(pen);
-    painter.setRenderHints(QPainter::Antialiasing, true);
-
     // For applying custom stylesheet
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &painter, this);
+    painter.setRenderHints(QPainter::Antialiasing, true);
 
+    // Draw gesture
+    painter.setPen(QPen(GESTURE_COLOR, PEN_WIDTH));
     if (!m_points.empty()) {
-        QVector<QPoint>::iterator it1 = m_points.begin();
-        QVector<QPoint>::iterator it2 = it1;
-        ++it2;
-        while (it2 != m_points.end()) {
-            painter.drawLine(*it1, *it2);
-            it1 = it2;
-            ++it2;
-        }
+        drawGesture(painter);
+    }
+
+    // Draw shape
+    painter.setPen(QPen(SHAPE_COLOR, PEN_WIDTH));
+    if (m_shape) {
+        drawShape(painter);
     }
 }
 
 void DrawableArea::startNewGestureCapture() {
     m_points.clear();
+    delete m_shape;
+    m_shape = NULL;
     m_gestureStarted = true;
     update();
     qDebug() << "Start new gesture capture";
@@ -69,7 +93,13 @@ void DrawableArea::addGesturePoint(const QPoint &pt) {
 void DrawableArea::stopGestureCapture() {
     m_gestureStarted = false;
     qDebug() << "Stop gesture capture";
+//    qDebug() << "Captured points: " << m_points;
     if (!m_points.empty()) {
         emit gestureCaptured(m_points);
     }
+}
+
+void DrawableArea::setShape(PShape shape) {
+    m_shape = shape;
+    update();
 }

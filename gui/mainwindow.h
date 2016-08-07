@@ -17,11 +17,8 @@ public:
     ~MainWindow();
 
 private slots:
-    /**
-     * @brief Add new entry to gesture history list
-     * @param desc gesture description
-     */
-    void addHistoryEntry(QString desc);
+
+    void addShapeToHistory(PShape desc);
 
     void on_quitButton_clicked();
 

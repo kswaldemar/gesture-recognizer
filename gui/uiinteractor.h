@@ -1,8 +1,13 @@
 #pragma once
 
+#include <shape.h>
+
 #include <QObject>
 #include <QPoint>
 #include <QVector>
+#include <QSharedDataPointer>
+
+typedef recog::iShape* PShape;
 
 /**
  * @brief Class for interaction with GestureRecognition library from gui
@@ -14,10 +19,10 @@ public:
 
 signals:
     /**
-     * @brief Emited when new gesture recognized
-     * @param description Gesture description in form of string
+     * @brief Emited when new gesture recognized. Contain shape, taken from gesture
+     * @param shape raw pointer
      */
-    void newGestureRegistered(QString description);
+    void newGestureRegistered(PShape shape);
 
 public slots:
     /**

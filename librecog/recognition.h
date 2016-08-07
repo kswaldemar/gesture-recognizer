@@ -5,14 +5,8 @@
 
 namespace recog {
 
-struct Gesture {
-    enum GestureType {
-        TYPE_LINE,
-        TYPE_UNDEFINED
-    };
-    GestureType type;
-};
+class iShape;
 
-Gesture recognizePointSet(const QVector<QPoint> &points);
+iShape* createShapeFromPoints(const QVector<QPoint> &points);
 
 }
