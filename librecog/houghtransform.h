@@ -3,6 +3,7 @@
 #include <QVector>
 #include <QPoint>
 #include <QLine>
+#include <QImage>
 
 namespace recog {
 
@@ -18,5 +19,7 @@ void lineHoughTransform(const QVector<QPoint> &points, HoughMatrix houghMt);
 QLine translateToLine(int theta, int radius, const QPoint &imgSize);
 
 QPoint getMaxValuePoint(const HoughMatrix mt);
+
+QImage getImageFromHoughMatrix(const HoughMatrix mt);
 
 }

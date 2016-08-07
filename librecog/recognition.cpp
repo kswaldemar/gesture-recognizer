@@ -60,4 +60,10 @@ QVector<QPoint> makeContinious(const QVector<QPoint> &points) {
     return ret;
 }
 
+QImage createHoughLineViewImage(const QVector<QPoint> &points) {
+    HoughMatrix mt;
+    lineHoughTransform(points, mt);
+    return getImageFromHoughMatrix(mt);
+}
+
 }

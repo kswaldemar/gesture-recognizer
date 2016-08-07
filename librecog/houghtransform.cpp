@@ -4,6 +4,7 @@
 #include <QGenericMatrix>
 #include <QLine>
 #include <QPointF>
+#include <QPixmap>
 
 #include <cmath>
 
@@ -71,6 +72,24 @@ QPoint getMaxValuePoint(const HoughMatrix mt) {
         }
     }
     return QPoint(mth, mr);
+}
+
+QImage getImageFromHoughMatrix(const HoughMatrix mt) {
+    QImage img(HOUGH_TH_DIM, HOUGH_R_DIM, QImage::Format_RGB32);
+
+    QPoint mPt = getMaxValuePoint(mt);
+    qint32 maxVal = mt[mPt.x()][mPt.y()];
+    qreal scale = static_cast<double>(255.0) / maxVal;
+
+    for (int th = 0; th < HOUGH_TH_DIM; ++th) {
+        for (int r = 0; r < HOUGH_R_DIM; ++r) {
+            uint exVal = static_cast<uint>(mt[th][r] * scale);
+            uint rgb = (0xff & exVal) | (0xff00 & (exVal << 8)) | (0xff0000 & (exVal << 16));
+            img.setPixel(th, r, rgb);
+        }
+    }
+    img.invertPixels(QImage::InvertRgb);
+    return img;
 }
 
 }

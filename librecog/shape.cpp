@@ -1,16 +1,15 @@
 #include "shape.h"
 
-#include <QPainter>
-#include <QString>
-#include <QPoint>
 #include <QDebug>
+#include <QPainter>
+#include <QPoint>
+#include <QString>
 
 namespace recog {
 
-iShape::~iShape() { }
+iShape::~iShape() {}
 
-SLine::SLine(const QPoint &pt1, const QPoint &pt2)
-    : m_pt1(pt1), m_pt2(pt2) { }
+SLine::SLine(const QPoint &pt1, const QPoint &pt2) : m_pt1(pt1), m_pt2(pt2) {}
 
 void SLine::draw(QPainter &painter) const {
     painter.drawLine(m_pt1, m_pt2);
@@ -18,11 +17,9 @@ void SLine::draw(QPainter &painter) const {
 
 QString SLine::toString() const {
     char buf[100];
-    snprintf(buf, sizeof(buf),
-             "LINE from (%d, %d) to (%d, %d)",
-             m_pt1.x(), m_pt1.y(), m_pt2.x(),m_pt2.y());
+    qsnprintf(buf, sizeof(buf),
+              "LINE from (%d, %d) to (%d, %d)",
+              m_pt1.x(), m_pt1.y(), m_pt2.x(), m_pt2.y());
     return buf;
 }
-
-
 }

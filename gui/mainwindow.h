@@ -20,9 +20,12 @@ private slots:
 
     void addShapeToHistory(PShape desc);
 
+    void updateHoughView(const QImage &image);
+
     void on_quitButton_clicked();
 
     void on_clearHistoryButton_clicked();
+
 
 private:
     Ui::MainWindow *ui;

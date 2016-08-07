@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QPoint>
 #include <QVector>
+#include <QImage>
 #include <QSharedDataPointer>
 
 typedef recog::iShape* PShape;
@@ -23,6 +24,8 @@ signals:
      * @param shape raw pointer
      */
     void newGestureRegistered(PShape shape);
+
+    void updateHoughTransformView(const QImage &image);
 
 public slots:
     /**
