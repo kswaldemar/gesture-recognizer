@@ -9,9 +9,8 @@
 UIInteractor::UIInteractor(QObject *parent) : QObject(parent) {}
 
 void UIInteractor::processGesture(QVector<QPoint> points) {
-    PShape shape(recog::createShapeFromPoints(points));
-    emit newGestureRegistered(shape);
-
-    QImage houghImage = recog::createHoughLineViewImage(points);
-    emit updateHoughTransformView(houghImage);
+    recog::Recognizer rcg;
+    rcg.loadGesture(points);
+    emit newGestureRegistered(rcg.detectShape());
+    emit updateHoughTransformView(rcg.houghTransformView());
 }

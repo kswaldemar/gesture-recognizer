@@ -1,6 +1,6 @@
 #include "recognition.h"
-#include "houghtransform.h"
 #include "common.h"
+#include "houghtransform.h"
 #include "shape.h"
 
 #include <QDebug>
@@ -11,29 +11,33 @@
 
 namespace recog {
 
-int extractLineWithScore(const QVector<QPoint> &points, QLine *line) {
-    HoughMatrix mt;
-    lineHoughTransform(points, mt);
-    QPoint maxP = getMaxValuePoint(mt);
-    int score = mt[maxP.x()][maxP.y()];
-    if (line) {
-        QPoint imSize = maxSizeFromPointSet(points);
-        *line = translateToLine(maxP.x(), maxP.y(), imSize);
-        cutLineWithBbox(*line, minSizeFromPointSet(points), imSize);
+void Recognizer::loadGesture(const QVector<QPoint> &points) {
+    m_gestPoints = makeContinious(points);
+
+    m_gestMt.clear();
+    QPoint imSize = maxSizeFromPointSet(points);
+    m_gestMt.resize(imSize.x());
+    for (int col = 0; col < imSize.x(); ++col) {
+        m_gestMt[col].resize(imSize.y());
     }
-    return score;
 }
 
-iShape *createShapeFromPoints(const QVector<QPoint> &points) {
-    QVector<QPoint> masterPoints = makeContinious(points);
-    // Here check probabilities and take the big one
+iShape *Recognizer::detectShape() {
     QLine line;
-    int lineScore = extractLineWithScore(masterPoints, &line);
+    int lineScore = detectLineWithScore(m_gestPoints, &line);
     qDebug() << "Line " << line << " with score " << lineScore;
     return new SLine(line.p1(), line.p2());
 }
 
-QVector<QPoint> makeContinious(const QVector<QPoint> &points) {
+QImage Recognizer::houghTransformView() {
+    return createHoughLineViewImage(m_gestPoints);
+}
+
+QImage Recognizer::createHoughLineViewImage(const QVector<QPoint> &points) {
+    return m_ht.lineHoughTransform(points).getImageFromHoughMatrix();
+}
+
+QVector<QPoint> Recognizer::makeContinious(const QVector<QPoint> &points) {
     QVector<QPoint> ret;
     QVector<QPoint>::const_iterator next = points.begin();
     ret.append(*next);
@@ -60,10 +64,15 @@ QVector<QPoint> makeContinious(const QVector<QPoint> &points) {
     return ret;
 }
 
-QImage createHoughLineViewImage(const QVector<QPoint> &points) {
-    HoughMatrix mt;
-    lineHoughTransform(points, mt);
-    return getImageFromHoughMatrix(mt);
+int Recognizer::detectLineWithScore(const QVector<QPoint> &points, QLine *line) {
+    m_ht.lineHoughTransform(points);
+    int score = m_ht.getMaxValue();
+    QPoint maxP = m_ht.getMaxValuePoint();
+    if (line) {
+        *line = m_ht.angleRadiusToLine(maxP.x(), maxP.y());
+        cutLineWithBbox(*line, minSizeFromPointSet(points), maxSizeFromPointSet(points));
+    }
+    return score;
 }
 
 }
