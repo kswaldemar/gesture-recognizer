@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QPoint>
+#include <QRect>
 
 class QPainter;
 class QString;
@@ -23,6 +24,16 @@ public:
 private:
     QPoint m_pt1;
     QPoint m_pt2;
+};
+
+class SRect : public iShape {
+public:
+    SRect(const QRect &rect);
+    void draw(QPainter &painter) const;
+    QString toString() const;
+
+private:
+    QRect m_rect;
 };
 
 }

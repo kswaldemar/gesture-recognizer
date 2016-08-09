@@ -22,4 +22,22 @@ QString SLine::toString() const {
               m_pt1.x(), m_pt1.y(), m_pt2.x(), m_pt2.y());
     return buf;
 }
+
+
+
+SRect::SRect(const QRect &rect) : m_rect(rect) {}
+
+void SRect::draw(QPainter &painter) const {
+    painter.drawRect(m_rect);
+}
+
+QString SRect::toString() const {
+    char buf[100];
+    qsnprintf(buf, sizeof(buf),
+              "RECTANGLE upper left (%d, %d); bottom right (%d, %d)",
+              m_rect.topLeft().x(), m_rect.topLeft().y(),
+              m_rect.bottomLeft().x(), m_rect.bottomRight().y());
+    return buf;
+}
+
 }

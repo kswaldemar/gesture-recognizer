@@ -12,7 +12,7 @@
 namespace recog {
 
 void Recognizer::loadGesture(const QVector<QPoint> &points) {
-    m_gestPoints = makeContinious(points);
+    m_gestPoints = makeContinuous(points);
 
     m_gestMt.clear();
     QPoint imSize = maxSizeFromPointSet(points);
@@ -26,7 +26,16 @@ iShape *Recognizer::detectShape() {
     QLine line;
     int lineScore = detectLineWithScore(m_gestPoints, &line);
     qDebug() << "Line " << line << " with score " << lineScore;
-    return new SLine(line.p1(), line.p2());
+
+    QRect rect;
+    int rectScore = detectRectangleWithScore(m_gestPoints, &rect);
+    qDebug() << "Rectangle " << rect << "with score" << rectScore;
+
+    if (lineScore > rectScore) {
+        return new SLine(line.p1(), line.p2());
+    } else {
+        return new SRect(rect);
+    }
 }
 
 QImage Recognizer::houghTransformView() {
@@ -37,7 +46,7 @@ QImage Recognizer::createHoughLineViewImage(const QVector<QPoint> &points) {
     return m_ht.lineHoughTransform(points).getImageFromHoughMatrix();
 }
 
-QVector<QPoint> Recognizer::makeContinious(const QVector<QPoint> &points) {
+QVector<QPoint> Recognizer::makeContinuous(const QVector<QPoint> &points) {
     QVector<QPoint> ret;
     QVector<QPoint>::const_iterator next = points.begin();
     ret.append(*next);
@@ -73,6 +82,10 @@ int Recognizer::detectLineWithScore(const QVector<QPoint> &points, QLine *line) 
         cutLineWithBbox(*line, minSizeFromPointSet(points), maxSizeFromPointSet(points));
     }
     return score;
+}
+
+int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, QRect *rect) {
+    return 0;
 }
 
 }

@@ -22,14 +22,16 @@ public:
 private:
     QImage createHoughLineViewImage(const QVector<QPoint> &points);
 
-    QVector<QPoint> makeContinious(const QVector<QPoint> &points);
+    QVector<QPoint> makeContinuous(const QVector<QPoint> &points);
 
     int detectLineWithScore(const QVector<QPoint> &points, QLine *line);
+
+    int detectRectangleWithScore(const QVector<QPoint> &points, QRect *rect);
 
 private:
     HoughTransform m_ht;
     QVector<QPoint> m_gestPoints;
-    QVector< QVector<QPoint> > m_gestMt;
+    QVector< QVector<int> > m_gestMt;
 };
 
 }
