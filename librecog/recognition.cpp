@@ -9,6 +9,12 @@
 #include <QString>
 #include <QVector>
 
+void printTimeDiff(timespec t1, timespec t2) {
+    static const quint64 E9 = 1e9;
+    quint64 timePassed = ((t2.tv_sec * E9) + t2.tv_nsec) - ((t1.tv_sec * E9) + t1.tv_nsec);
+    fprintf(stderr, "Time cosumed: %2llu.%08llu\n", timePassed / E9, timePassed % E9);
+}
+
 namespace recog {
 
 void Recognizer::loadGesture(const QVector<QPoint> &points) {
@@ -23,13 +29,20 @@ void Recognizer::loadGesture(const QVector<QPoint> &points) {
 }
 
 iShape *Recognizer::detectShape() {
+    timespec ts1, ts2;
     QLine line;
+    clock_gettime(CLOCK_MONOTONIC, &ts1);
     int lineScore = detectLineWithScore(m_gestPoints, &line);
+    clock_gettime(CLOCK_MONOTONIC, &ts2);
     qDebug() << "Line " << line << " with score " << lineScore;
+    printTimeDiff(ts1, ts2);
 
     QRect rect;
+    clock_gettime(CLOCK_MONOTONIC, &ts1);
     int rectScore = detectRectangleWithScore(m_gestPoints, &rect);
+    clock_gettime(CLOCK_MONOTONIC, &ts2);
     qDebug() << "Rectangle " << rect << "with score" << rectScore;
+    printTimeDiff(ts1, ts2);
 
     if (lineScore > rectScore) {
         return new SLine(line.p1(), line.p2());
