@@ -1,6 +1,7 @@
 #pragma once
 
 #include <shape.h>
+#include <recognition.h>
 
 #include <QObject>
 #include <QPoint>
@@ -33,4 +34,7 @@ public slots:
      * @param points Vector of points in the order of drawing
      */
     void processGesture(QVector<QPoint> points);
+
+private:
+    recog::Recognizer m_rcg;
 };

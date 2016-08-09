@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include <cmath>
+#include <cstdio>
 
 namespace recog {
 
@@ -69,6 +70,12 @@ void cutLineWithBbox(QLine &line, const QPoint &ul, const QPoint &br) {
 
     line.setLine(static_cast<int>(fLine.p1().x()), static_cast<int>(fLine.p1().y()),
                  static_cast<int>(fLine.p2().x()), static_cast<int>(fLine.p2().y()));
+}
+
+void printTimeDiff(timespec t1, timespec t2, const char *prefix) {
+    static const quint64 E9 = 1e9;
+    quint64 timePassed = ((t2.tv_sec * E9) + t2.tv_nsec) - ((t1.tv_sec * E9) + t1.tv_nsec);
+    fprintf(stderr, "%s: %2llu.%08llu\n", prefix, timePassed / E9, timePassed % E9);
 }
 
 }

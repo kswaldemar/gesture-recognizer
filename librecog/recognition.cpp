@@ -9,12 +9,6 @@
 #include <QString>
 #include <QVector>
 
-void printTimeDiff(timespec t1, timespec t2) {
-    static const quint64 E9 = 1e9;
-    quint64 timePassed = ((t2.tv_sec * E9) + t2.tv_nsec) - ((t1.tv_sec * E9) + t1.tv_nsec);
-    fprintf(stderr, "Time cosumed: %2llu.%08llu\n", timePassed / E9, timePassed % E9);
-}
-
 namespace recog {
 
 void Recognizer::loadGesture(const QVector<QPoint> &points) {

@@ -4,7 +4,6 @@
 #include <QPoint>
 #include <QLine>
 
-
 namespace recog {
 
 QPoint maxSizeFromPointSet(const QVector<QPoint> &points);
@@ -16,5 +15,7 @@ double radToDeg(double rad);
 double degToRad(double deg);
 
 void cutLineWithBbox(QLine &line, const QPoint &ul, const QPoint &br);
+
+void printTimeDiff(timespec t1, timespec t2, const char *prefix="Time consumed");
 
 }
