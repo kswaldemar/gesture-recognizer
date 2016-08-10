@@ -29,8 +29,8 @@ Recognizer::~Recognizer() {
 void Recognizer::loadGesture(const QVector<QPoint> &points) {
     m_gestPoints = points;
     QPoint trick = maxSizeFromPointSet(points);
-    m_gestMtSize.setHeight(trick.y());
-    m_gestMtSize.setWidth(trick.x());
+    m_gestMtSize.setHeight(trick.y() + 1);
+    m_gestMtSize.setWidth(trick.x() + 1);
 }
 
 iShape *Recognizer::detectShape() {
@@ -133,7 +133,9 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, QRect *r
 
 void Recognizer::clearGestMatrix() {
     for (int x = 0; x < IMG_MAX_WIDTH; ++x) {
-        memset(m_gestMt[x], 0, sizeof(m_gestMt[0][0]) * IMG_MAX_HEIGHT);
+        for (int y = 0; y < IMG_MAX_HEIGHT; ++y) {
+            m_gestMt[x][y] = 0;
+        }
     }
 }
 
@@ -154,11 +156,10 @@ void Recognizer::drawPointsInGestMatrix(const QVector<QPoint> &points, bool cont
             m_gestMt[cur->x()][cur->y()] = 1;
         }
         if (continuous && next != points.end()) {
-            drawLineInMatrix(m_gestMt, QSize(IMG_MAX_WIDTH, IMG_MAX_HEIGHT), *cur, *next, 1);
+            drawLineInMatrix(m_gestMt, m_gestMtSize, *cur, *next, 1);
         }
         cur = next++;
     }
-
 }
 
 }
