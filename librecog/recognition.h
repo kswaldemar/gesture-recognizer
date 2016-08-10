@@ -37,6 +37,7 @@ private:
     HoughTransform m_ht;
     QVector<QPoint> m_gestPoints;
     quint8 **m_gestMt;
+    QSize m_gestMtSize;
 };
 
 }
