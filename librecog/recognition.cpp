@@ -38,7 +38,7 @@ iShape *Recognizer::detectShape() {
     qDebug() << "Rectangle " << rect << "with score" << rectScore;
     printTimeDiff(ts1, ts2);
 
-    if (lineScore > rectScore) {
+    if (lineScore >= rectScore) {
         return new SLine(line.p1(), line.p2());
     } else {
         return new SRect(rect);
