@@ -78,4 +78,37 @@ void printTimeDiff(timespec t1, timespec t2, const char *prefix) {
     fprintf(stderr, "%s: %2llu.%08llu\n", prefix, timePassed / E9, timePassed % E9);
 }
 
+void drawLineInMatrix(quint8 **mt,
+                      const QSize &mtSize,
+                      const QPoint &pt1,
+                      const QPoint &pt2,
+                      int val) {
+    QPoint shiftX(1, 0);
+    QPoint shiftY(0, 1);
+    QPoint curPt = pt1;
+    QPoint endPt = pt2;
+
+    while (curPt != endPt) {
+        const QPoint dist = QPoint(endPt - curPt);
+        if (dist.manhattanLength() > 1) {
+            if (qAbs(dist.x()) > qAbs(dist.y())) {
+                curPt += shiftX * (dist.x() > 0 ? 1 : -1);
+            } else {
+                curPt += shiftY * (dist.y() > 0 ? 1 : -1);
+            }
+        } else {
+            curPt = endPt;
+        }
+
+        //Set point in matrix, if it valid
+        if (   curPt.x() >= 0 && curPt.x() < mtSize.width()
+            && curPt.y() >= 0 && curPt.y() < mtSize.height()) {
+
+            mt[curPt.x()][curPt.y()] = val;
+        }
+    }
+}
+
+
+
 }

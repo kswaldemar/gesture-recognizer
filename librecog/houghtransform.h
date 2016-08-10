@@ -20,13 +20,7 @@ public:
 
     HoughTransform();
 
-    /**
-     * @brief Perform line hough transformation over vector of points.
-     * Parametric field formula is F(x, y, th, r) = x * cos(th) + y * sin(th) - r
-     * @param points points with figure in order of drawing
-     * @return reference to *this, for further chain call
-     */
-    HoughTransform &lineHoughTransform(const QVector<QPoint> &points);
+    HoughTransform &lineHoughTransform(quint8 *matrix[], QSize mtSize);
     /**
      * @brief Convert [theta, radius] to [x, y] decart coords.
      * Respectively to image size, which was calculated from last hough transform call.
@@ -58,9 +52,13 @@ public:
 
 private:
     /// Image size, calculated from points in last hough transformation call
-    QPoint m_imSize;
+    QSize m_imSize;
     /// Hough parametric field
     HoughMatrix m_hmt;
+    /// Sin table precalculated
+    qreal m_sin[HOUGH_TH_DIM];
+    /// Cos table precalculated
+    qreal m_cos[HOUGH_TH_DIM];
 };
 
 
