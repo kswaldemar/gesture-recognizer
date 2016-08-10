@@ -28,6 +28,9 @@ Recognizer::~Recognizer() {
 
 void Recognizer::loadGesture(const QVector<QPoint> &points) {
     m_gestPoints = points;
+    QPoint trick = maxSizeFromPointSet(points);
+    m_gestMtSize.setHeight(trick.y());
+    m_gestMtSize.setWidth(trick.x());
 }
 
 iShape *Recognizer::detectShape() {
