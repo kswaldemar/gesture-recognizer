@@ -12,7 +12,7 @@
  */
 const QColor GESTURE_COLOR = "blue";
 const QColor SHAPE_COLOR = "red";
-const int PEN_WIDTH = 1;
+const int PEN_WIDTH = 2;
 
 
 DrawableArea::DrawableArea(QWidget *parent) : QWidget(parent), m_shape(NULL) {}
@@ -59,7 +59,7 @@ void DrawableArea::paintEvent(QPaintEvent *) {
     QPainter painter(this);
     // For applying custom stylesheet
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &painter, this);
-    painter.setRenderHints(QPainter::Antialiasing, false);
+    painter.setRenderHints(QPainter::Antialiasing, true);
 
     // Draw gesture
     painter.setPen(QPen(GESTURE_COLOR, PEN_WIDTH));
