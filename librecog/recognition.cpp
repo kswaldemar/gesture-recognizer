@@ -13,6 +13,8 @@
 
 namespace recog {
 
+static const quint8 RECTANGLE_DEVIATION_PX = 10;
+
 Recognizer::Recognizer() {
     m_gestMt = new quint8* [IMG_MAX_WIDTH];
     for (int i = 0; i < IMG_MAX_WIDTH; ++i) {
@@ -90,16 +92,25 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, QRect *r
     for (int i = 0; i < 4; ++i) {
         QPoint maxP = m_ht.lineHoughTransform(m_gestMt, m_gestMtSize).getMaxValuePoint();
         lines[i] = m_ht.angleRadiusToLine(maxP.x(), maxP.y());
+        cutLineWithBbox(lines[i], QPoint(0, 0), QPoint(m_gestMtSize.width(), m_gestMtSize.height()));
+        qDebug() << lines[i];
         scores[i] = m_ht.getMaxValue();
         angles[i] = radToDeg(maxP.x() * M_PI / HOUGH_TH_DIM);
 
         // Remove line from image
-        drawLineInMatrix(m_gestMt, m_gestMtSize, lines[i].p1(), lines[i].p2(), 0);
+        drawLineInMatrix(m_gestMt, m_gestMtSize,
+                         lines[i].p1(), lines[i].p2(),
+                         0, RECTANGLE_DEVIATION_PX);
     }
 
     // Make sure this is rectangle
-    qSort(angles, angles + 4);
     const qreal DEVIATION = 5;
+    for (int i = 0; i < 4; ++i) {
+        if (angles[i] >= 180 - DEVIATION) {
+            angles[i] = 180 - angles[i];
+        }
+    }
+    qSort(angles, angles + 4);
     //Two angles near to zero and two near to 90
     const bool isSureRectangle =
                qAbs(angles[0])      <= DEVIATION && qAbs(angles[1])      <= DEVIATION

@@ -82,11 +82,19 @@ void drawLineInMatrix(quint8 **mt,
                       const QSize &mtSize,
                       const QPoint &pt1,
                       const QPoint &pt2,
-                      int val) {
-    QPoint shiftX(1, 0);
-    QPoint shiftY(0, 1);
+                      quint8 val,
+                      int extraWidth) {
+    const QPoint shiftX(1, 0);
+    const QPoint shiftY(0, 1);
+
     QPoint curPt = pt1;
-    QPoint endPt = pt2;
+    const QPoint endPt = pt2;
+
+    QVector<QPoint> extraShifts;
+    extraShifts.append(shiftX);
+    extraShifts.append(-shiftX);
+    extraShifts.append(shiftY);
+    extraShifts.append(-shiftY);
 
     while (curPt != endPt) {
         const QPoint dist = QPoint(endPt - curPt);
@@ -102,12 +110,26 @@ void drawLineInMatrix(quint8 **mt,
         }
 
         //Set point in matrix, if it valid
-        if (   curPt.x() >= 0 && curPt.x() < mtSize.width()
-            && curPt.y() >= 0 && curPt.y() < mtSize.height()) {
-
+        if (isValidPoint(curPt, mtSize)) {
             mt[curPt.x()][curPt.y()] = val;
         }
+
+        // If need extra width
+        QPoint extraPt;
+        for (int i = 1; i <= extraWidth; ++i) {
+            foreach (const QPoint &shift, extraShifts) {
+                extraPt = curPt + shift;
+                if (isValidPoint(extraPt, mtSize)) {
+                    mt[extraPt.x()][extraPt.y()] = val;
+                }
+            }
+        }
     }
+}
+
+bool isValidPoint(const QPoint &pt, const QSize &size) {
+    return     pt.x() >= 0 && pt.x() < size.width()
+            && pt.y() >= 0 && pt.y() < size.height();
 }
 
 
