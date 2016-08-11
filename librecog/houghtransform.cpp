@@ -10,7 +10,7 @@
 
 namespace recog {
 
-void fillHoughMatrix(HoughMatrix mt, int val) {
+void fillHoughMatrix(HoughMatrix mt, quint16 val) {
     for (int th = 0; th < HOUGH_TH_DIM; ++th) {
         for (int r = 0; r < HOUGH_R_DIM; ++r) {
             mt[th][r] = val;
@@ -19,41 +19,56 @@ void fillHoughMatrix(HoughMatrix mt, int val) {
 }
 
 HoughTransform::HoughTransform() {
+    /*
+     * Memory allocation
+     */
+    m_hmt = new quint16* [HOUGH_TH_DIM];
+    for (int th = 0; th < HOUGH_TH_DIM; ++th) {
+        m_hmt[th] = new quint16[HOUGH_R_DIM];
+    }
+
+    /*
+     * Initially all zeroes
+     */
     fillHoughMatrix(m_hmt, 0);
-}
-
-HoughTransform &HoughTransform::lineHoughTransform(const QVector<QPoint> &points) {
-    fillHoughMatrix(m_hmt, 0);
-
-    m_imSize = maxSizeFromPointSet(points);
-
-    const double rMax = hypot(m_imSize.x(), m_imSize.y());
-    const double dth = M_PI / HOUGH_TH_DIM;
 
     /*
      * sin, cos tables precalc
      */
-    static qreal prCos[HOUGH_TH_DIM];
-    static qreal prSin[HOUGH_TH_DIM];
-    static bool called = false;
-    if (!called) {
-        called = true;
-        for (int i = 0; i < HOUGH_TH_DIM; ++i) {
-            prCos[i] = cos(i * dth);
-            prSin[i] = sin(i * dth);
+    const qreal dth = M_PI / HOUGH_TH_DIM;
+    for (int i = 0; i < HOUGH_TH_DIM; ++i) {
+        m_sin[i] = sin(i * dth);
+        m_cos[i] = cos(i * dth);
+    }
+}
+
+HoughTransform::~HoughTransform() {
+    for (int th = 0; th < HOUGH_TH_DIM; ++th) {
+        delete[] m_hmt[th];
+    }
+    delete[] m_hmt;
+}
+
+HoughTransform &HoughTransform::lineHoughTransform(quint8* matrix[], QSize mtSize) {
+    fillHoughMatrix(m_hmt, 0);
+
+    m_imSize = mtSize;
+
+    const qreal rMax = hypot(m_imSize.width(), m_imSize.height());
+
+    qreal radius;
+    const qreal halfR = HOUGH_R_DIM / 2;
+    for (int x = 0; x < mtSize.width(); ++x) {
+        for (int y = 0; y < mtSize.height(); ++y) {
+            if (matrix[x][y] > 0) {
+                for (int jth = 0; jth < HOUGH_TH_DIM; ++jth) {
+                    radius = x * m_cos[jth] + y * m_sin[jth];
+                    int ir = static_cast<int>(halfR - ceil(radius * halfR / rMax));
+                    m_hmt[jth][ir] += HOUGH_ONE_SCORE;
+                }
+            }
         }
     }
-
-    double radius;
-    const double halfR = HOUGH_R_DIM / 2;
-    for (QVector<QPoint>::const_iterator it = points.begin(); it != points.end(); ++it) {
-        for (int jth = 0; jth < HOUGH_TH_DIM; ++jth) {
-            radius = it->x() * prCos[jth] + it->y() * prSin[jth];
-            int ir = static_cast<int>(halfR - ceil(radius * halfR / rMax));
-            m_hmt[jth][ir] += HOUGH_ONE_SCORE;
-        }
-    }
-
     return *this;
 }
 
@@ -62,7 +77,7 @@ QLine HoughTransform::angleRadiusToLine(int theta, int radius) const {
     double th = theta;
     th = theta * M_PI / HOUGH_TH_DIM;
     th = radToDeg(th);
-    double rMax = hypot(m_imSize.x(), m_imSize.y());
+    double rMax = hypot(m_imSize.width(), m_imSize.height());
     double r = rMax - (radius * rMax) / (HOUGH_R_DIM / 2);
 
     qDebug() << "Normalized: " << th << " " << r;

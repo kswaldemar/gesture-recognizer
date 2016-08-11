@@ -9,17 +9,30 @@
 #include <QString>
 #include <QVector>
 
+#include <cmath>
+
 namespace recog {
 
-void Recognizer::loadGesture(const QVector<QPoint> &points) {
-    m_gestPoints = makeContinuous(points);
-
-    m_gestMt.clear();
-    QPoint imSize = maxSizeFromPointSet(points);
-    m_gestMt.resize(imSize.x());
-    for (int col = 0; col < imSize.x(); ++col) {
-        m_gestMt[col].resize(imSize.y());
+Recognizer::Recognizer() {
+    m_gestMt = new quint8* [IMG_MAX_WIDTH];
+    for (int i = 0; i < IMG_MAX_WIDTH; ++i) {
+        m_gestMt[i] = new quint8[IMG_MAX_HEIGHT];
     }
+    m_gestMtSize = QSize(IMG_MAX_WIDTH, IMG_MAX_HEIGHT);
+}
+
+Recognizer::~Recognizer() {
+    for (int i = 0; i < IMG_MAX_WIDTH; ++i) {
+        delete[] m_gestMt[i];
+    }
+    delete[] m_gestMt;
+}
+
+void Recognizer::loadGesture(const QVector<QPoint> &points) {
+    m_gestPoints = points;
+    QPoint trick = maxSizeFromPointSet(points);
+    m_gestMtSize.setHeight(trick.y() + 1);
+    m_gestMtSize.setWidth(trick.x() + 1);
 }
 
 iShape *Recognizer::detectShape() {
@@ -50,38 +63,15 @@ QImage Recognizer::houghTransformView() {
 }
 
 QImage Recognizer::createHoughLineViewImage(const QVector<QPoint> &points) {
-    return m_ht.lineHoughTransform(points).getImageFromHoughMatrix();
-}
-
-QVector<QPoint> Recognizer::makeContinuous(const QVector<QPoint> &points) {
-    QVector<QPoint> ret;
-    QVector<QPoint>::const_iterator next = points.begin();
-    ret.append(*next);
-
-    QPoint shiftX(1, 0);
-    QPoint shiftY(0, 1);
-    QPoint curPt = *next;
-    ++next;
-    while (next != points.end()) {
-        const QPoint dist = QPoint(*next - curPt);
-        if (dist.manhattanLength() > 1) {
-            if (qAbs(dist.x()) > qAbs(dist.y())) {
-                curPt += shiftX * (dist.x() > 0 ? 1 : -1);
-            } else {
-                curPt += shiftY * (dist.y() > 0 ? 1 : -1);
-            }
-        } else {
-            curPt = *next;
-            ++next;
-        }
-        ret.append(curPt);
-    }
-
-    return ret;
+    drawPointsInGestMatrix(points);
+    return m_ht
+        .lineHoughTransform(m_gestMt, m_gestMtSize)
+        .getImageFromHoughMatrix();
 }
 
 int Recognizer::detectLineWithScore(const QVector<QPoint> &points, QLine *line) {
-    m_ht.lineHoughTransform(points);
+    drawPointsInGestMatrix(points);
+    m_ht.lineHoughTransform(m_gestMt, m_gestMtSize);
     int score = m_ht.getMaxValue();
     QPoint maxP = m_ht.getMaxValuePoint();
     if (line) {
@@ -92,7 +82,100 @@ int Recognizer::detectLineWithScore(const QVector<QPoint> &points, QLine *line) 
 }
 
 int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, QRect *rect) {
-    return 0;
+    drawPointsInGestMatrix(points);
+
+    QLine lines[4];
+    int scores[4] = {0};
+    qreal angles[4] = {0};
+    for (int i = 0; i < 4; ++i) {
+        QPoint maxP = m_ht.lineHoughTransform(m_gestMt, m_gestMtSize).getMaxValuePoint();
+        lines[i] = m_ht.angleRadiusToLine(maxP.x(), maxP.y());
+        scores[i] = m_ht.getMaxValue();
+        angles[i] = radToDeg(maxP.x() * M_PI / HOUGH_TH_DIM);
+
+        // Remove line from image
+        drawLineInMatrix(m_gestMt, m_gestMtSize, lines[i].p1(), lines[i].p2(), 0);
+    }
+
+    // Make sure this is rectangle
+    qSort(angles, angles + 4);
+    const qreal DEVIATION = 5;
+    //Two angles near to zero and two near to 90
+    const bool isSureRectangle =
+               qAbs(angles[0])      <= DEVIATION && qAbs(angles[1])      <= DEVIATION
+            && qAbs(angles[2] - 90) <= DEVIATION && qAbs(angles[3] - 90) <= DEVIATION;
+    if (!isSureRectangle) {
+        return 0;
+    }
+
+
+    // Try to intersect lines for points
+    QVector<QPointF> vertex;
+    QPointF pt;
+    for (int i = 0; i < 4; ++i) {
+        for (int j = i + 1; j < 4; ++j) {
+            QLineF l1(lines[i]);
+            QLineF l2(lines[j]);
+            if (l1.intersect(l2, &pt) == QLineF::BoundedIntersection) {
+                vertex.append(pt);
+            }
+        }
+    }
+
+    if (vertex.size() != 4) {
+        // Not enough vertexes, this is not rectangle
+        return 0;
+    }
+
+    int fullScore = 0;
+    for (int i = 0; i < 4; ++i) {
+        fullScore += scores[i];
+    }
+
+    if (rect) {
+        QPoint ul(100000, 100000);
+        QPoint br(-1, -1);
+        foreach (const QPointF &pt, vertex) {
+            ul.setX(qMin(ul.x(), static_cast<int>(pt.x())));
+            ul.setY(qMin(ul.y(), static_cast<int>(pt.y())));
+            br.setX(qMax(br.x(), static_cast<int>(pt.x())));
+            br.setY(qMax(br.y(), static_cast<int>(pt.y())));
+        }
+        rect->setCoords(ul.x(), ul.y(), br.x(), br.y());
+    }
+
+    return fullScore;
+}
+
+void Recognizer::clearGestMatrix() {
+    for (int x = 0; x < IMG_MAX_WIDTH; ++x) {
+        for (int y = 0; y < IMG_MAX_HEIGHT; ++y) {
+            m_gestMt[x][y] = 0;
+        }
+    }
+}
+
+void Recognizer::drawPointsInGestMatrix(const QVector<QPoint> &points, bool continuous) {
+    if (points.empty()) {
+        return;
+    }
+
+    clearGestMatrix();
+
+    QVector<QPoint>::ConstIterator next = points.begin();
+    QVector<QPoint>::ConstIterator cur = next++;
+    bool isValidPoint;
+    while (cur != points.end()) {
+        isValidPoint = (   cur->x() >= 0 && cur->x() < IMG_MAX_WIDTH
+                        && cur->y() >= 0 && cur->y() < IMG_MAX_HEIGHT);
+        if (isValidPoint) {
+            m_gestMt[cur->x()][cur->y()] = 1;
+        }
+        if (continuous && next != points.end()) {
+            drawLineInMatrix(m_gestMt, m_gestMtSize, *cur, *next, 1);
+        }
+        cur = next++;
+    }
 }
 
 }
