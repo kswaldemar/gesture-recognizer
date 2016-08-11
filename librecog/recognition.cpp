@@ -9,6 +9,8 @@
 #include <QString>
 #include <QVector>
 
+#include <cmath>
+
 namespace recog {
 
 Recognizer::Recognizer() {
@@ -84,14 +86,28 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, QRect *r
 
     QLine lines[4];
     int scores[4] = {0};
+    qreal angles[4] = {0};
     for (int i = 0; i < 4; ++i) {
         QPoint maxP = m_ht.lineHoughTransform(m_gestMt, m_gestMtSize).getMaxValuePoint();
         lines[i] = m_ht.angleRadiusToLine(maxP.x(), maxP.y());
         scores[i] = m_ht.getMaxValue();
+        angles[i] = radToDeg(maxP.x() * M_PI / HOUGH_TH_DIM);
 
         // Remove line from image
         drawLineInMatrix(m_gestMt, m_gestMtSize, lines[i].p1(), lines[i].p2(), 0);
     }
+
+    // Make sure this is rectangle
+    qSort(angles, angles + 4);
+    const qreal DEVIATION = 5;
+    //Two angles near to zero and two near to 90
+    const bool isSureRectangle =
+               qAbs(angles[0])      <= DEVIATION && qAbs(angles[1])      <= DEVIATION
+            && qAbs(angles[2] - 90) <= DEVIATION && qAbs(angles[3] - 90) <= DEVIATION;
+    if (!isSureRectangle) {
+        return 0;
+    }
+
 
     // Try to intersect lines for points
     QVector<QPointF> vertex;
