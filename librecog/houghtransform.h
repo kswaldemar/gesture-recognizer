@@ -7,7 +7,7 @@
 
 namespace recog {
 
-#define HOUGH_TH_DIM        (720)
+#define HOUGH_TH_DIM        (480)
 #define HOUGH_R_DIM         (2048)
 #define HOUGH_ONE_SCORE     (1)
 

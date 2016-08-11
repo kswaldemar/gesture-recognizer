@@ -91,9 +91,10 @@ void drawLineInMatrix(quint8 **mt,
     while (curPt != endPt) {
         const QPoint dist = QPoint(endPt - curPt);
         if (dist.manhattanLength() > 1) {
-            if (qAbs(dist.x()) > qAbs(dist.y())) {
+            if (qAbs(dist.x()) >= qAbs(dist.y())) {
                 curPt += shiftX * (dist.x() > 0 ? 1 : -1);
-            } else {
+            }
+            if (qAbs(dist.y()) >= qAbs(dist.x())) {
                 curPt += shiftY * (dist.y() > 0 ? 1 : -1);
             }
         } else {
