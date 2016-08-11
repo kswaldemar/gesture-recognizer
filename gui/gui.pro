@@ -1,5 +1,8 @@
 QT       += core gui
 
+QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_RELEASE += -O3
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = gesture-recognition

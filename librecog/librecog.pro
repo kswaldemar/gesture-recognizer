@@ -1,5 +1,8 @@
 QT += core gui
 
+QMAKE_CXXFLAGS_RELEASE -= -O2
+QMAKE_CXXFLAGS_RELEASE += -O3
+
 TARGET = recog
 TEMPLATE = lib
 CONFIG += staticlib

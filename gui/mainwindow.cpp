@@ -34,7 +34,7 @@ void MainWindow::updateHoughView(const QImage &image) {
     const int width = qMin(480, image.width());
     const int height = qMin(360, image.height());
     const QPixmap pxm = QPixmap::fromImage(image).scaled(width, height, Qt::IgnoreAspectRatio,
-                                                         Qt::FastTransformation);
+                                                         Qt::SmoothTransformation);
     ui->houghView->setPixmap(pxm);
     ui->houghView->update();
 }
