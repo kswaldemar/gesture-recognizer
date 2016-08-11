@@ -10,7 +10,7 @@
 
 namespace recog {
 
-void fillHoughMatrix(HoughMatrix mt, int val) {
+void fillHoughMatrix(HoughMatrix mt, quint16 val) {
     for (int th = 0; th < HOUGH_TH_DIM; ++th) {
         for (int r = 0; r < HOUGH_R_DIM; ++r) {
             mt[th][r] = val;
@@ -19,6 +19,17 @@ void fillHoughMatrix(HoughMatrix mt, int val) {
 }
 
 HoughTransform::HoughTransform() {
+    /*
+     * Memory allocation
+     */
+    m_hmt = new quint16* [HOUGH_TH_DIM];
+    for (int th = 0; th < HOUGH_TH_DIM; ++th) {
+        m_hmt[th] = new quint16[HOUGH_R_DIM];
+    }
+
+    /*
+     * Initially all zeroes
+     */
     fillHoughMatrix(m_hmt, 0);
 
     /*
@@ -29,6 +40,13 @@ HoughTransform::HoughTransform() {
         m_sin[i] = sin(i * dth);
         m_cos[i] = cos(i * dth);
     }
+}
+
+HoughTransform::~HoughTransform() {
+    for (int th = 0; th < HOUGH_TH_DIM; ++th) {
+        delete[] m_hmt[th];
+    }
+    delete[] m_hmt;
 }
 
 HoughTransform &HoughTransform::lineHoughTransform(quint8* matrix[], QSize mtSize) {

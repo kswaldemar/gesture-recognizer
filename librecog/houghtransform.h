@@ -7,11 +7,11 @@
 
 namespace recog {
 
-#define HOUGH_TH_DIM        (480)
-#define HOUGH_R_DIM         (360)
+#define HOUGH_TH_DIM        (720)
+#define HOUGH_R_DIM         (2048)
 #define HOUGH_ONE_SCORE     (1)
 
-typedef int HoughMatrix[HOUGH_TH_DIM][HOUGH_R_DIM];
+typedef quint16** HoughMatrix;
 /**
  * @brief Class to perform hough transformation with various formulas
  */
@@ -19,6 +19,8 @@ class HoughTransform {
 public:
 
     HoughTransform();
+
+    ~HoughTransform();
 
     HoughTransform &lineHoughTransform(quint8 *matrix[], QSize mtSize);
     /**
@@ -60,18 +62,5 @@ private:
     /// Cos table precalculated
     qreal m_cos[HOUGH_TH_DIM];
 };
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }
