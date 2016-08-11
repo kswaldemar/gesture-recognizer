@@ -36,7 +36,7 @@ QString SRect::toString() const {
     qsnprintf(buf, sizeof(buf),
               "RECTANGLE upper left (%d, %d); bottom right (%d, %d)",
               m_rect.topLeft().x(), m_rect.topLeft().y(),
-              m_rect.bottomLeft().x(), m_rect.bottomRight().y());
+              m_rect.bottomRight().x(), m_rect.bottomRight().y());
     return buf;
 }
 
