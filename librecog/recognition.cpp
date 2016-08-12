@@ -92,7 +92,8 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, QRect *r
     for (int i = 0; i < 4; ++i) {
         QPoint maxP = m_ht.lineHoughTransform(m_gestMt, m_gestMtSize).getMaxValuePoint();
         lines[i] = m_ht.angleRadiusToLine(maxP.x(), maxP.y());
-        cutLineWithBbox(lines[i], QPoint(0, 0), QPoint(m_gestMtSize.width(), m_gestMtSize.height()));
+        cutLineWithBbox(lines[i], QPoint(0, 0),
+                        QPoint(m_gestMtSize.width(), m_gestMtSize.height()));
         qDebug() << lines[i];
         scores[i] = m_ht.getMaxValue();
         angles[i] = radToDeg(maxP.x() * M_PI / HOUGH_TH_DIM);
