@@ -22,19 +22,27 @@ public:
 
     ~HoughTransform();
 
+    /**
+     * @brief Perform line hough transformation over image.
+     * It find lines, using the formula: x * cos(th) + y * sin(th) = r
+     * After this call, internal hough matrix filled with apropriate values.
+     *
+     * @param matrix image representation, non zero values correspond pixel presence
+     * @param mtSize size of matrix dimension, in form of matrix[width][height]
+     * @return reference to *this for further chained calls
+     */
     HoughTransform &lineHoughTransform(quint8 *matrix[], QSize mtSize);
     /**
      * @brief Convert [theta, radius] to [x, y] decart coords.
      * Respectively to image size, which was calculated from last hough transform call.
-     * If no one of hough transformation called result is invalid
-     * @param theta
-     * @param radius
-     * @return
+     * There should be previous call of lineHoughTransform, or result is invalid.
+     * @param theta x coord in hough matrix
+     * @param radius y coord in hough matrix
+     * @return Line in decart coordinate system
      */
     QLine angleRadiusToLine(int theta, int radius) const;
     /**
      * @brief Get point with maximum value from hough matrix.
-     * Should be called after any hough transformation calls
      * @return point in hough matrix in form of (theta, radius)
      */
     QPoint getMaxValuePoint() const;
@@ -47,7 +55,7 @@ public:
      * @brief Create image with graphical representation of the hough matrix.
      * Image has white background, so darker pixel represents bigger values.
      * Image brightness adjusted, so full black pixel correspond most big value in matrix.
-     * Dimension 1:1 with hough matrix (HOUGH_TH_DIM x HOUGH_R_DIM)
+     * Image size same as hough matrix size (HOUGH_TH_DIM x HOUGH_R_DIM)
      * @return image with hough parametric field representation
      */
     QImage getImageFromHoughMatrix() const;
@@ -57,9 +65,9 @@ private:
     QSize m_imSize;
     /// Hough parametric field
     HoughMatrix m_hmt;
-    /// Sin table precalculated
+    /// Precalculated table of sin function
     qreal m_sin[HOUGH_TH_DIM];
-    /// Cos table precalculated
+    /// Precalculated table of cos function
     qreal m_cos[HOUGH_TH_DIM];
 };
 
