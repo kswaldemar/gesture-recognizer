@@ -54,17 +54,17 @@ iShape *Recognizer::detectShape() {
     clock_gettime(CLOCK_MONOTONIC, &ts1);
     scores[0] = detectLineWithScore(m_gestPoints, shapes[0]);
     clock_gettime(CLOCK_MONOTONIC, &ts2);
-    printTimeDiff(ts1, ts2);
+    printTimeDiff(ts1, ts2, "Line detection time");
 
     clock_gettime(CLOCK_MONOTONIC, &ts1);
     scores[1] = detectRectangleWithScore(m_gestPoints, shapes[1]);
     clock_gettime(CLOCK_MONOTONIC, &ts2);
-    printTimeDiff(ts1, ts2);
+    printTimeDiff(ts1, ts2, "Rectangle detection time");
 
     clock_gettime(CLOCK_MONOTONIC, &ts1);
     scores[2] = detectEllipseWithScore(m_gestPoints, shapes[2]);
     clock_gettime(CLOCK_MONOTONIC, &ts2);
-    printTimeDiff(ts1, ts2);
+    printTimeDiff(ts1, ts2, "Ellipse detection time");
 
     int maxInd = 0;
     for (int i = 0; i < SHAPES_COUNT; ++i) {
@@ -119,7 +119,6 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, iShape *
         lines[i] = m_ht.angleRadiusToLine(maxP.x(), maxP.y());
         cutLineWithBbox(lines[i], QPoint(0, 0),
                         QPoint(m_gestMtSize.width(), m_gestMtSize.height()));
-        qDebug() << lines[i];
         scores[i] = m_ht.getMaxValue();
         angles[i] = radToDeg(maxP.x() * M_PI / HOUGH_TH_DIM);
 
@@ -142,7 +141,6 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, iShape *
                                  qAbs(angles[2] - 90) <= RECTANGLE_ANGLE_DEVIATION &&
                                  qAbs(angles[3] - 90) <= RECTANGLE_ANGLE_DEVIATION;
     if (!isSureRectangle) {
-        qDebug() << "Rectanlge fail: I'm not sure this is rectangle";
         return 0;
     }
 
@@ -161,7 +159,6 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, iShape *
 
     if (vertex.size() != 4) {
         // Not enough vertexes, this is not rectangle
-        qDebug() << "Rectanlge fail: Found only" << vertex.size() << "vertexes";
         return 0;
     }
 
@@ -184,7 +181,6 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, iShape *
     // If difference <= deviation this might be not rectangle
     if ((br.x() - ul.x()) <= RECTANGLE_DEVIATION_PX ||
         (br.y() - ul.y()) <= RECTANGLE_DEVIATION_PX) {
-        qDebug() << "Rectangle fail: Its very small relative to deviation";
         return 0;
     }
 
@@ -230,7 +226,7 @@ int Recognizer::detectEllipseWithScore(const QVector<QPoint> &points, iShape *&s
         }
     }
 
-    if (m00 == 0) {
+    if (m00 <= 1e-6 && m00 >= -1e-6) {
         return 0;
     }
 
