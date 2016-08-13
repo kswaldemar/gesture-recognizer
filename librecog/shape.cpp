@@ -41,10 +41,10 @@ QString SRect::toString() const {
     return buf;
 }
 
-SEllipsis::SEllipsis(const QPoint &center, qreal angle, quint16 a, quint16 b)
+SEllipse::SEllipse(const QPoint &center, qreal angle, quint16 a, quint16 b)
     : m_center(center), m_angle(angle), m_a(a), m_b(b) { }
 
-void SEllipsis::draw(QPainter &painter) const {
+void SEllipse::draw(QPainter &painter) const {
     painter.drawEllipse(m_center, 10, 10);
 
     QTransform wts;
@@ -54,7 +54,7 @@ void SEllipsis::draw(QPainter &painter) const {
     painter.drawEllipse(QPoint(0, 0), m_a, m_b);
 }
 
-QString SEllipsis::toString() const {
+QString SEllipse::toString() const {
     char buf[100];
     qsnprintf(buf, sizeof(buf),
               "ELLIPSIS center=(%d, %d); rotation angle=%.2f; a=%d; b=%d",

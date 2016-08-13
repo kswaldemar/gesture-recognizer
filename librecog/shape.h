@@ -36,9 +36,9 @@ private:
     QRect m_rect;
 };
 
-class SEllipsis : public iShape {
+class SEllipse : public iShape {
 public:
-    SEllipsis(const QPoint &center, qreal angle, quint16 a, quint16 b);
+    SEllipse(const QPoint &center, qreal angle, quint16 a, quint16 b);
     void draw(QPainter &painter) const;
     QString toString() const;
 

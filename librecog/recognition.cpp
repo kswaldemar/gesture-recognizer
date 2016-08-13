@@ -13,7 +13,10 @@
 
 namespace recog {
 
+///Maximum deviation from rectangle line in pixels
 static const quint8 RECTANGLE_DEVIATION_PX = 10;
+///Ellipse deviation from equation value 1.0
+static const qreal ELLIPSE_DEVIATION = 0.005;
 
 Recognizer::Recognizer() {
     m_gestMt = new quint8* [IMG_MAX_WIDTH];
@@ -56,7 +59,7 @@ iShape *Recognizer::detectShape() {
     printTimeDiff(ts1, ts2);
 
     clock_gettime(CLOCK_MONOTONIC, &ts1);
-    scores[2] = detectEllipsisWithScore(m_gestPoints, shapes[2]);
+    scores[2] = detectEllipseWithScore(m_gestPoints, shapes[2]);
     clock_gettime(CLOCK_MONOTONIC, &ts2);
     printTimeDiff(ts1, ts2);
 
@@ -181,7 +184,7 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, iShape *
     return fullScore;
 }
 
-int Recognizer::detectEllipsisWithScore(const QVector<QPoint> &points, iShape *&sEllips) {
+int Recognizer::detectEllipseWithScore(const QVector<QPoint> &points, iShape *&sEllips) {
     // Spatial moments
     qreal m00 = 0, m10 = 0, m20 = 0, m01 = 0, m02 = 0, m11 = 0;
 
@@ -217,6 +220,10 @@ int Recognizer::detectEllipsisWithScore(const QVector<QPoint> &points, iShape *&
         }
     }
 
+    if (m00 == 0) {
+        return 0;
+    }
+
     // Mass center
     QPointF mc(m10 / m00, m01 / m00);
 
@@ -236,9 +243,24 @@ int Recognizer::detectEllipsisWithScore(const QVector<QPoint> &points, iShape *&
         std::swap(l1, l2);
     }
 
-    sEllips = new SEllipsis(QPoint(mc.x(), mc.y()), angle, 2.0 * l1, 2.0 * l2);
+    sEllips = new SEllipse(QPoint(mc.x(), mc.y()), angle, 2.0 * l1, 2.0 * l2);
 
-    return 1000;
+    int score = 0;
+    qreal cosa = cos(angle);
+    qreal sina = sin(angle);
+    for (int x = 0; x < m_gestMtSize.width(); ++x) {
+        for (int y = 0; y < m_gestMtSize.height(); ++y) {
+            qreal dx = x - mc.x();
+            qreal dy = y - mc.y();
+            qreal t1 = sqr((cosa * dx + sina * dy) / l1);
+            qreal t2 = sqr((sina * dx - cosa * dy) / l2);
+
+            qreal ellipse = t1 + t2;
+            score += (ellipse <= 1.0 + ELLIPSE_DEVIATION) && (ellipse >= 1.0 - ELLIPSE_DEVIATION);
+        }
+    }
+
+    return score;
 }
 
 void Recognizer::clearGestMatrix() {

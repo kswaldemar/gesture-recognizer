@@ -30,7 +30,7 @@ private:
 
     int detectRectangleWithScore(const QVector<QPoint> &points, iShape *&sRect);
 
-    int detectEllipsisWithScore(const QVector<QPoint> &points, iShape *&sEllips);
+    int detectEllipseWithScore(const QVector<QPoint> &points, iShape *&sEllips);
 
     void clearGestMatrix();
 
