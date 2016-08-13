@@ -13,13 +13,16 @@
 
 namespace recog {
 
-///Maximum deviation from rectangle line in pixels
-static const quint8 RECTANGLE_DEVIATION_PX = 10;
-///Ellipse deviation from equation value 1.0
-static const qreal ELLIPSE_DEVIATION = 0.005;
+/// Maximum point deviation from rectangle line in pixels
+static const quint8 RECTANGLE_DEVIATION_PX = 4;
+/// Maximum deviation from 90 and 0 degrees for rectangle lines
+const qreal RECTANGLE_ANGLE_DEVIATION = 5;
+
+/// Maximum point deviation from ellipse border in pixels
+static const qreal ELLIPSE_DEVIATION_PX = 4;
 
 Recognizer::Recognizer() {
-    m_gestMt = new quint8* [IMG_MAX_WIDTH];
+    m_gestMt = new quint8 *[IMG_MAX_WIDTH];
     for (int i = 0; i < IMG_MAX_WIDTH; ++i) {
         m_gestMt[i] = new quint8[IMG_MAX_HEIGHT];
     }
@@ -65,14 +68,14 @@ iShape *Recognizer::detectShape() {
 
     int maxInd = 0;
     for (int i = 0; i < SHAPES_COUNT; ++i) {
-        qDebug().nospace() << "Shape(" << i <<") score " << scores[i]
+        qDebug().nospace() << "Shape(" << i << ") score " << scores[i]
                            << ". Description: " << (shapes[i] ? shapes[i]->toString() : "None");
         if (scores[i] > scores[maxInd]) {
             maxInd = i;
         }
     }
 
-    //Free non used shapes
+    // Free non used shapes
     for (int i = 0; i < SHAPES_COUNT; ++i) {
         if (i != maxInd && shapes[i]) {
             delete shapes[i];
@@ -88,9 +91,7 @@ QImage Recognizer::houghTransformView() {
 
 QImage Recognizer::createHoughLineViewImage(const QVector<QPoint> &points) {
     drawPointsInGestMatrix(points);
-    return m_ht
-        .lineHoughTransform(m_gestMt, m_gestMtSize)
-        .getImageFromHoughMatrix();
+    return m_ht.lineHoughTransform(m_gestMt, m_gestMtSize).getImageFromHoughMatrix();
 }
 
 int Recognizer::detectLineWithScore(const QVector<QPoint> &points, iShape *&sLine) {
@@ -123,27 +124,27 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, iShape *
         angles[i] = radToDeg(maxP.x() * M_PI / HOUGH_TH_DIM);
 
         // Remove line from image
-        drawLineInMatrix(m_gestMt, m_gestMtSize,
+        drawLineInMatrix(m_gestMt, QSize(IMG_MAX_WIDTH, IMG_MAX_HEIGHT),
                          lines[i].p1(), lines[i].p2(),
                          0, RECTANGLE_DEVIATION_PX);
     }
 
     // Make sure this is rectangle
-    const qreal DEVIATION = 5;
     for (int i = 0; i < 4; ++i) {
-        if (angles[i] >= 180 - DEVIATION) {
+        if (angles[i] >= 180 - RECTANGLE_ANGLE_DEVIATION) {
             angles[i] = 180 - angles[i];
         }
     }
     qSort(angles, angles + 4);
-    //Two angles near to zero and two near to 90
-    const bool isSureRectangle =
-               qAbs(angles[0])      <= DEVIATION && qAbs(angles[1])      <= DEVIATION
-            && qAbs(angles[2] - 90) <= DEVIATION && qAbs(angles[3] - 90) <= DEVIATION;
+    // Two angles near to zero and two near to 90
+    const bool isSureRectangle = qAbs(angles[0]) <= RECTANGLE_ANGLE_DEVIATION &&
+                                 qAbs(angles[1]) <= RECTANGLE_ANGLE_DEVIATION &&
+                                 qAbs(angles[2] - 90) <= RECTANGLE_ANGLE_DEVIATION &&
+                                 qAbs(angles[3] - 90) <= RECTANGLE_ANGLE_DEVIATION;
     if (!isSureRectangle) {
+        qDebug() << "Rectanlge fail: I'm not sure this is rectangle";
         return 0;
     }
-
 
     // Try to intersect lines for points
     QVector<QPointF> vertex;
@@ -160,6 +161,7 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, iShape *
 
     if (vertex.size() != 4) {
         // Not enough vertexes, this is not rectangle
+        qDebug() << "Rectanlge fail: Found only" << vertex.size() << "vertexes";
         return 0;
     }
 
@@ -178,6 +180,14 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, iShape *
         br.setX(qMax(br.x(), static_cast<int>(pt.x())));
         br.setY(qMax(br.y(), static_cast<int>(pt.y())));
     }
+
+    // If difference <= deviation this might be not rectangle
+    if ((br.x() - ul.x()) <= RECTANGLE_DEVIATION_PX ||
+        (br.y() - ul.y()) <= RECTANGLE_DEVIATION_PX) {
+        qDebug() << "Rectangle fail: Its very small relative to deviation";
+        return 0;
+    }
+
     rect.setCoords(ul.x(), ul.y(), br.x(), br.y());
     sRect = new SRect(rect);
 
@@ -246,17 +256,23 @@ int Recognizer::detectEllipseWithScore(const QVector<QPoint> &points, iShape *&s
     sEllips = new SEllipse(QPoint(mc.x(), mc.y()), angle, 2.0 * l1, 2.0 * l2);
 
     int score = 0;
-    qreal cosa = cos(angle);
-    qreal sina = sin(angle);
+    l2 *= 2;
+    l1 *= 2;
+    const qreal cosa = cos(angle);
+    const qreal sina = sin(angle);
+    const qreal deviation = ELLIPSE_DEVIATION_PX / sqrt(l1 * l1 + l2 * l2);
     for (int x = 0; x < m_gestMtSize.width(); ++x) {
         for (int y = 0; y < m_gestMtSize.height(); ++y) {
-            qreal dx = x - mc.x();
-            qreal dy = y - mc.y();
-            qreal t1 = sqr((cosa * dx + sina * dy) / l1);
-            qreal t2 = sqr((sina * dx - cosa * dy) / l2);
+            if (m_gestMt[x][y] > 0) {
+                qreal dx = x - mc.x();
+                qreal dy = y - mc.y();
+                qreal t1 = sqr((cosa * dx + sina * dy) / l1);
+                qreal t2 = sqr((sina * dx - cosa * dy) / l2);
 
-            qreal ellipse = t1 + t2;
-            score += (ellipse <= 1.0 + ELLIPSE_DEVIATION) && (ellipse >= 1.0 - ELLIPSE_DEVIATION);
+                qreal ellipse = t1 + t2;
+                score +=   (ellipse <= 1.0 + deviation)
+                        && (ellipse >= 1.0 - deviation);
+            }
         }
     }
 

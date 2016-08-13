@@ -118,7 +118,7 @@ void drawLineInMatrix(quint8 **mt,
         QPoint extraPt;
         for (int i = 1; i <= extraWidth; ++i) {
             foreach (const QPoint &shift, extraShifts) {
-                extraPt = curPt + shift;
+                extraPt = curPt + (shift * i);
                 if (isValidPoint(extraPt, mtSize)) {
                     mt[extraPt.x()][extraPt.y()] = val;
                 }
