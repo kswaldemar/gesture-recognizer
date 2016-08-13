@@ -208,15 +208,12 @@ int Recognizer::detectEllipsisWithScore(const QVector<QPoint> &points, iShape *&
         }
         // Like through outer contour
         for (int x = firstX; x <= lastX; ++x) {
-            if (m_gestMt[x][y] > 0) {
-                // Contour or inside figure
-                m00 += 1;
-                m10 += x;
-                m01 += y;
-                m11 += x * y;
-                m20 += x * x;
-                m02 += y * y;
-            }
+            m00 += 1;
+            m10 += x;
+            m01 += y;
+            m11 += x * y;
+            m20 += x * x;
+            m02 += y * y;
         }
     }
 
@@ -239,7 +236,7 @@ int Recognizer::detectEllipsisWithScore(const QVector<QPoint> &points, iShape *&
         std::swap(l1, l2);
     }
 
-    sEllips = new SEllipsis(QPoint(round(mc.x()), round( mc.y())), angle, round(l1), round(l2));
+    sEllips = new SEllipsis(QPoint(mc.x(), mc.y()), angle, 2.0 * l1, 2.0 * l2);
 
     return 1000;
 }

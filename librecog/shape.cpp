@@ -47,10 +47,11 @@ SEllipsis::SEllipsis(const QPoint &center, qreal angle, quint16 a, quint16 b)
 void SEllipsis::draw(QPainter &painter) const {
     painter.drawEllipse(m_center, 10, 10);
 
-    QPoint shiftX(1, 0);
-    QPoint shiftY(0, 1);
-    painter.drawLine(m_center - shiftX * m_a, m_center + shiftX * m_a);
-    painter.drawLine(m_center - shiftY * m_b, m_center + shiftY * m_b);
+    QTransform wts;
+    wts.translate(m_center.x(), m_center.y());
+    wts.rotateRadians(m_angle);
+    painter.setTransform(wts);
+    painter.drawEllipse(QPoint(0, 0), m_a, m_b);
 }
 
 QString SEllipsis::toString() const {
