@@ -80,7 +80,6 @@ QLine HoughTransform::angleRadiusToLine(int theta, int radius) const {
     double rMax = hypot(m_imSize.width(), m_imSize.height());
     double r = rMax - (radius * rMax) / (HOUGH_R_DIM / 2);
 
-    qDebug() << "Normalized: " << th << " " << r;
     // Translate line to two point form
     th = degToRad(th);
     double a = cos(th);
