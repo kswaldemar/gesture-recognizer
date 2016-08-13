@@ -36,4 +36,16 @@ private:
     QRect m_rect;
 };
 
+class SEllipse : public iShape {
+public:
+    SEllipse(const QPoint &center, qreal angle, quint16 a, quint16 b);
+    void draw(QPainter &painter) const;
+    QString toString() const;
+
+private:
+    QPoint m_center;
+    qreal m_angle;
+    quint16 m_a;
+    quint16 m_b;
+};
 }

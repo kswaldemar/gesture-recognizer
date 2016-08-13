@@ -38,4 +38,9 @@ void drawLineInMatrix(quint8 **mt,
 
 bool isValidPoint(const QPoint &pt, const QSize &size);
 
+template<typename T>
+inline T sqr(T val) {
+    return val * val;
+}
+
 }

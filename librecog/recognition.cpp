@@ -13,7 +13,10 @@
 
 namespace recog {
 
+///Maximum deviation from rectangle line in pixels
 static const quint8 RECTANGLE_DEVIATION_PX = 10;
+///Ellipse deviation from equation value 1.0
+static const qreal ELLIPSE_DEVIATION = 0.005;
 
 Recognizer::Recognizer() {
     m_gestMt = new quint8* [IMG_MAX_WIDTH];
@@ -39,25 +42,44 @@ void Recognizer::loadGesture(const QVector<QPoint> &points) {
 
 iShape *Recognizer::detectShape() {
     timespec ts1, ts2;
-    QLine line;
+
+    const int SHAPES_COUNT = 3;
+
+    int scores[SHAPES_COUNT] = {0};
+    iShape *shapes[SHAPES_COUNT] = {NULL};
+
     clock_gettime(CLOCK_MONOTONIC, &ts1);
-    int lineScore = detectLineWithScore(m_gestPoints, &line);
+    scores[0] = detectLineWithScore(m_gestPoints, shapes[0]);
     clock_gettime(CLOCK_MONOTONIC, &ts2);
-    qDebug() << "Line " << line << " with score " << lineScore;
     printTimeDiff(ts1, ts2);
 
-    QRect rect;
     clock_gettime(CLOCK_MONOTONIC, &ts1);
-    int rectScore = detectRectangleWithScore(m_gestPoints, &rect);
+    scores[1] = detectRectangleWithScore(m_gestPoints, shapes[1]);
     clock_gettime(CLOCK_MONOTONIC, &ts2);
-    qDebug() << "Rectangle " << rect << "with score" << rectScore;
     printTimeDiff(ts1, ts2);
 
-    if (lineScore >= rectScore) {
-        return new SLine(line.p1(), line.p2());
-    } else {
-        return new SRect(rect);
+    clock_gettime(CLOCK_MONOTONIC, &ts1);
+    scores[2] = detectEllipseWithScore(m_gestPoints, shapes[2]);
+    clock_gettime(CLOCK_MONOTONIC, &ts2);
+    printTimeDiff(ts1, ts2);
+
+    int maxInd = 0;
+    for (int i = 0; i < SHAPES_COUNT; ++i) {
+        qDebug().nospace() << "Shape(" << i <<") score " << scores[i]
+                           << ". Description: " << (shapes[i] ? shapes[i]->toString() : "None");
+        if (scores[i] > scores[maxInd]) {
+            maxInd = i;
+        }
     }
+
+    //Free non used shapes
+    for (int i = 0; i < SHAPES_COUNT; ++i) {
+        if (i != maxInd && shapes[i]) {
+            delete shapes[i];
+        }
+    }
+
+    return shapes[maxInd];
 }
 
 QImage Recognizer::houghTransformView() {
@@ -71,19 +93,21 @@ QImage Recognizer::createHoughLineViewImage(const QVector<QPoint> &points) {
         .getImageFromHoughMatrix();
 }
 
-int Recognizer::detectLineWithScore(const QVector<QPoint> &points, QLine *line) {
+int Recognizer::detectLineWithScore(const QVector<QPoint> &points, iShape *&sLine) {
     drawPointsInGestMatrix(points);
     m_ht.lineHoughTransform(m_gestMt, m_gestMtSize);
     int score = m_ht.getMaxValue();
     QPoint maxP = m_ht.getMaxValuePoint();
-    if (line) {
-        *line = m_ht.angleRadiusToLine(maxP.x(), maxP.y());
-        cutLineWithBbox(*line, minSizeFromPointSet(points), maxSizeFromPointSet(points));
-    }
+
+    QLine line;
+    line = m_ht.angleRadiusToLine(maxP.x(), maxP.y());
+    cutLineWithBbox(line, minSizeFromPointSet(points), maxSizeFromPointSet(points));
+    sLine = new SLine(line.p1(), line.p2());
+
     return score;
 }
 
-int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, QRect *rect) {
+int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, iShape *&sRect) {
     drawPointsInGestMatrix(points);
 
     QLine lines[4];
@@ -92,7 +116,8 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, QRect *r
     for (int i = 0; i < 4; ++i) {
         QPoint maxP = m_ht.lineHoughTransform(m_gestMt, m_gestMtSize).getMaxValuePoint();
         lines[i] = m_ht.angleRadiusToLine(maxP.x(), maxP.y());
-        cutLineWithBbox(lines[i], QPoint(0, 0), QPoint(m_gestMtSize.width(), m_gestMtSize.height()));
+        cutLineWithBbox(lines[i], QPoint(0, 0),
+                        QPoint(m_gestMtSize.width(), m_gestMtSize.height()));
         qDebug() << lines[i];
         scores[i] = m_ht.getMaxValue();
         angles[i] = radToDeg(maxP.x() * M_PI / HOUGH_TH_DIM);
@@ -143,19 +168,99 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, QRect *r
         fullScore += scores[i];
     }
 
-    if (rect) {
-        QPoint ul(100000, 100000);
-        QPoint br(-1, -1);
-        foreach (const QPointF &pt, vertex) {
-            ul.setX(qMin(ul.x(), static_cast<int>(pt.x())));
-            ul.setY(qMin(ul.y(), static_cast<int>(pt.y())));
-            br.setX(qMax(br.x(), static_cast<int>(pt.x())));
-            br.setY(qMax(br.y(), static_cast<int>(pt.y())));
-        }
-        rect->setCoords(ul.x(), ul.y(), br.x(), br.y());
+    // Create shape
+    QRect rect;
+    QPoint ul(100000, 100000);
+    QPoint br(-1, -1);
+    foreach (const QPointF &pt, vertex) {
+        ul.setX(qMin(ul.x(), static_cast<int>(pt.x())));
+        ul.setY(qMin(ul.y(), static_cast<int>(pt.y())));
+        br.setX(qMax(br.x(), static_cast<int>(pt.x())));
+        br.setY(qMax(br.y(), static_cast<int>(pt.y())));
     }
+    rect.setCoords(ul.x(), ul.y(), br.x(), br.y());
+    sRect = new SRect(rect);
 
     return fullScore;
+}
+
+int Recognizer::detectEllipseWithScore(const QVector<QPoint> &points, iShape *&sEllips) {
+    // Spatial moments
+    qreal m00 = 0, m10 = 0, m20 = 0, m01 = 0, m02 = 0, m11 = 0;
+
+    clearGestMatrix();
+    drawPointsInGestMatrix(points, true);
+
+    // Calculate moments with horizontal intersector line from up to down
+    QPoint minSz = minSizeFromPointSet(points);
+    QPoint maxSz = maxSizeFromPointSet(points);
+    for (int y = minSz.y(); y <= maxSz.y(); ++y) {
+        int firstX = -1;
+        int lastX = -1;
+        for (int x = minSz.x() - 1; x <= maxSz.x(); ++x) {
+            if (m_gestMt[x][y]) {
+                if (firstX < 0) {
+                    firstX = x;
+                } else {
+                    lastX = x;
+                }
+            }
+        }
+        if (lastX == -1) {
+            continue;
+        }
+        // Like through outer contour
+        for (int x = firstX; x <= lastX; ++x) {
+            m00 += 1;
+            m10 += x;
+            m01 += y;
+            m11 += x * y;
+            m20 += x * x;
+            m02 += y * y;
+        }
+    }
+
+    if (m00 == 0) {
+        return 0;
+    }
+
+    // Mass center
+    QPointF mc(m10 / m00, m01 / m00);
+
+    // Central moments
+    qreal u11 = m11 / m00 - mc.x() * mc.y();
+    qreal u20 = m20 / m00 - mc.x() * mc.x();
+    qreal u02 = m02 / m00 - mc.y() * mc.y();
+
+    // Rotation angle
+    qreal angle = 0.5 * atan(2.0 * u11 / (u20 - u02));
+
+    // Half axes
+    qreal du = u20 - u02;
+    qreal l1 = sqrt((u20 + u02 + sqrt(4 * u11 * u11 + du * du)) / 2.0);
+    qreal l2 = sqrt((u20 + u02 - sqrt(4 * u11 * u11 + du * du)) / 2.0);
+    if (u20 < u02) {
+        std::swap(l1, l2);
+    }
+
+    sEllips = new SEllipse(QPoint(mc.x(), mc.y()), angle, 2.0 * l1, 2.0 * l2);
+
+    int score = 0;
+    qreal cosa = cos(angle);
+    qreal sina = sin(angle);
+    for (int x = 0; x < m_gestMtSize.width(); ++x) {
+        for (int y = 0; y < m_gestMtSize.height(); ++y) {
+            qreal dx = x - mc.x();
+            qreal dy = y - mc.y();
+            qreal t1 = sqr((cosa * dx + sina * dy) / l1);
+            qreal t2 = sqr((sina * dx - cosa * dy) / l2);
+
+            qreal ellipse = t1 + t2;
+            score += (ellipse <= 1.0 + ELLIPSE_DEVIATION) && (ellipse >= 1.0 - ELLIPSE_DEVIATION);
+        }
+    }
+
+    return score;
 }
 
 void Recognizer::clearGestMatrix() {
