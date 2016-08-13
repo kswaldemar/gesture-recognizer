@@ -26,9 +26,11 @@ public:
 private:
     QImage createHoughLineViewImage(const QVector<QPoint> &points);
 
-    int detectLineWithScore(const QVector<QPoint> &points, QLine *line);
+    int detectLineWithScore(const QVector<QPoint> &points, iShape *&sLine);
 
-    int detectRectangleWithScore(const QVector<QPoint> &points, QRect *rect);
+    int detectRectangleWithScore(const QVector<QPoint> &points, iShape *&sRect);
+
+    int detectEllipsisWithScore(const QVector<QPoint> &points, iShape *&sEllips);
 
     void clearGestMatrix();
 
