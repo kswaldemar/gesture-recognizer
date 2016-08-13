@@ -182,7 +182,65 @@ int Recognizer::detectRectangleWithScore(const QVector<QPoint> &points, iShape *
 }
 
 int Recognizer::detectEllipsisWithScore(const QVector<QPoint> &points, iShape *&sEllips) {
-    sEllips = new SEllipsis(QPoint(100, 100), 0, 10, 15);
+    // Spatial moments
+    qreal m00 = 0, m10 = 0, m20 = 0, m01 = 0, m02 = 0, m11 = 0;
+
+    clearGestMatrix();
+    drawPointsInGestMatrix(points, true);
+
+    // Calculate moments with horizontal intersector line from up to down
+    QPoint minSz = minSizeFromPointSet(points);
+    QPoint maxSz = maxSizeFromPointSet(points);
+    for (int y = minSz.y(); y <= maxSz.y(); ++y) {
+        int firstX = -1;
+        int lastX = -1;
+        for (int x = minSz.x() - 1; x <= maxSz.x(); ++x) {
+            if (m_gestMt[x][y]) {
+                if (firstX < 0) {
+                    firstX = x;
+                } else {
+                    lastX = x;
+                }
+            }
+        }
+        if (lastX == -1) {
+            continue;
+        }
+        // Like through outer contour
+        for (int x = firstX; x <= lastX; ++x) {
+            if (m_gestMt[x][y] > 0) {
+                // Contour or inside figure
+                m00 += 1;
+                m10 += x;
+                m01 += y;
+                m11 += x * y;
+                m20 += x * x;
+                m02 += y * y;
+            }
+        }
+    }
+
+    // Mass center
+    QPointF mc(m10 / m00, m01 / m00);
+
+    // Central moments
+    qreal u11 = m11 / m00 - mc.x() * mc.y();
+    qreal u20 = m20 / m00 - mc.x() * mc.x();
+    qreal u02 = m02 / m00 - mc.y() * mc.y();
+
+    // Rotation angle
+    qreal angle = 0.5 * atan(2.0 * u11 / (u20 - u02));
+
+    // Half axes
+    qreal du = u20 - u02;
+    qreal l1 = sqrt((u20 + u02 + sqrt(4 * u11 * u11 + du * du)) / 2.0);
+    qreal l2 = sqrt((u20 + u02 - sqrt(4 * u11 * u11 + du * du)) / 2.0);
+    if (u20 < u02) {
+        std::swap(l1, l2);
+    }
+
+    sEllips = new SEllipsis(QPoint(round(mc.x()), round( mc.y())), angle, round(l1), round(l2));
+
     return 1000;
 }
 
