@@ -45,8 +45,6 @@ SEllipse::SEllipse(const QPoint &center, qreal angle, quint16 a, quint16 b)
     : m_center(center), m_angle(angle), m_a(a), m_b(b) { }
 
 void SEllipse::draw(QPainter &painter) const {
-    painter.drawEllipse(m_center, 10, 10);
-
     QTransform wts;
     wts.translate(m_center.x(), m_center.y());
     wts.rotateRadians(m_angle);
@@ -57,7 +55,7 @@ void SEllipse::draw(QPainter &painter) const {
 QString SEllipse::toString() const {
     char buf[100];
     qsnprintf(buf, sizeof(buf),
-              "ELLIPSIS center=(%d, %d); rotation angle=%.2f; a=%d; b=%d",
+              "ELLIPSE center=(%d, %d); rotation angle=%.2f; a=%d; b=%d",
               m_center.x(), m_center.y(),
               recog::radToDeg(m_angle),
               m_a, m_b);

@@ -68,16 +68,32 @@ private:
     QRect m_rect;
 };
 
+/**
+ * @brief Shape representing the ellipse
+ */
 class SEllipse : public iShape {
 public:
+    /**
+     * @brief Constructor
+     * @param center ellipse center
+     * @param angle rotation angle in radian
+     * @param a half of the first axe
+     * @param b half of the second axe
+     */
     SEllipse(const QPoint &center, qreal angle, quint16 a, quint16 b);
+
     void draw(QPainter &painter) const;
+
     QString toString() const;
 
 private:
+    /// Ellipse center
     QPoint m_center;
+    /// Rotation angle in radian
     qreal m_angle;
+    /// Half of the first ellipse axe
     quint16 m_a;
+    /// Half of the second ellipse axe
     quint16 m_b;
 };
 }
