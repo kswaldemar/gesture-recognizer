@@ -21,11 +21,15 @@ public:
 
 signals:
     /**
-     * @brief Emited when new gesture recognized. Contain shape, taken from gesture
-     * @param shape raw pointer
+     * @brief Emited when new gesture recognized
+     * @param raw pointer to shape, recognized from gesture points
      */
     void newGestureRegistered(PShape shape);
 
+    /**
+     * @brief Emited after gesture recogntion
+     * @param image hough parametric field representation
+     */
     void updateHoughTransformView(const QImage &image);
 
 public slots:
@@ -36,5 +40,6 @@ public slots:
     void processGesture(QVector<QPoint> points);
 
 private:
+    /// Recognizer used for recognition operations
     recog::Recognizer m_rcg;
 };

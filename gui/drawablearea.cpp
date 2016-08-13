@@ -12,7 +12,7 @@
  */
 const QColor GESTURE_COLOR = "blue";
 const QColor SHAPE_COLOR = "red";
-const int PEN_WIDTH = 1;
+const int PEN_WIDTH = 2;
 
 
 DrawableArea::DrawableArea(QWidget *parent) : QWidget(parent), m_shape(NULL) {}
@@ -59,7 +59,7 @@ void DrawableArea::paintEvent(QPaintEvent *) {
     QPainter painter(this);
     // For applying custom stylesheet
     style()->drawPrimitive(QStyle::PE_Widget, &opt, &painter, this);
-    painter.setRenderHints(QPainter::Antialiasing, false);
+    painter.setRenderHints(QPainter::Antialiasing, true);
 
     // Draw gesture
     painter.setPen(QPen(GESTURE_COLOR, PEN_WIDTH));
@@ -80,7 +80,6 @@ void DrawableArea::startNewGestureCapture() {
     m_shape = NULL;
     m_gestureStarted = true;
     update();
-    qDebug() << "Start new gesture capture";
 }
 
 void DrawableArea::addGesturePoint(const QPoint &pt) {
@@ -92,8 +91,6 @@ void DrawableArea::addGesturePoint(const QPoint &pt) {
 
 void DrawableArea::stopGestureCapture() {
     m_gestureStarted = false;
-    qDebug() << "Stop gesture capture";
-    qDebug() << "Captured points: " << m_points;
     if (!m_points.empty()) {
         emit gestureCaptured(m_points);
     }
