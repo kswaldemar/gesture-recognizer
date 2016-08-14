@@ -5,7 +5,7 @@ QMAKE_CXXFLAGS_RELEASE += -O3
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = gesture-recognition
+TARGET = gesture-recognizer
 TEMPLATE = app
 
 
