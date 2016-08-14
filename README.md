@@ -16,11 +16,12 @@ Depends only from Qt4 and uses c++98 standard
 ![Example](./doc/example.png)
 
 Main window consist of three parts:
-* Area to draw images - drawing starts with any mouse button pressed, after releasing button recognition process starts immediately 
+* Area to draw images - drawing starts with any mouse button pressed. Recognition starts immediately after releasing button.
 * Hough transformation matrix of the processed image
 * History of previously recognized images
 
-Recognized graphical primitive drawn on the same area with red color.
+The recognizable graphic primitive is drawn with the red color on the same area
+
 
 Supported primitives:
 * Line
@@ -30,6 +31,7 @@ Supported primitives:
 Algorithm and references can be found [here](./doc/algorithm-desc-ru.md).
 
 Tested under Debian 8 Jessie with `Qt 4.8.6` and `gcc 4.9.2`
+
 ## Build
 
 ```
@@ -37,15 +39,16 @@ mkdir build && cd build
 qmake ..
 make
 ```
-Then launch interface in `gui/gesture-recognizer`
+Then launch executable in `gui/gesture-recognizer`
+
 ### Documentation
 
 To build doxygen documentation do in project source root:
 ```
-doxygen doxygen.conf
+doxygen
 ```
-Generated files will be placed in `./doc`
+Generated files will be placed in `./doc/doxygen`
 
 ## License 
 
-This code is licensed under the [MIT license](./LICENSE)
+All work is licensed under the [MIT license](./LICENSE)
