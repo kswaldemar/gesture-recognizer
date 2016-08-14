@@ -56,6 +56,11 @@ protected:
     void stopGestureCapture();
 
 public slots:
+    /**
+     * @brief Set shape to draw on a widget
+     * @param shape raw pointer to shape, function TAKE ownership over it, so it will be deleted
+     * after start of new gesture capture.
+     */
     void setShape(PShape shape);
 
 signals:
@@ -66,7 +71,16 @@ signals:
     void gestureCaptured(QVector<QPoint> points);
 
 private:
+    /**
+     * @brief Draw points of user gesture on a widget
+     * @param painter painter by means of which draw
+     */
     void drawGesture(QPainter &painter);
+    /**
+     * @brief Draw internal shape on a widget.
+     * Shape should be previously setuped via setShape function
+     * @param painter painter by means of which draw
+     */
     void drawShape(QPainter &painter);
 
     /// Points in the order of drawing
