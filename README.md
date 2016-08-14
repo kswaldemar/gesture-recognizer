@@ -28,7 +28,7 @@ Supported primitives:
 * Rectangle
 * Ellipse (with rotation)
 
-Algorithm and references can be found [here](./doc/algorithm-desc-ru.md).
+[Used algorithm and references can be found here](./doc/algorithm-desc.md).
 
 Tested under Debian 8 Jessie with `Qt 4.8.6` and `gcc 4.9.2`
 
