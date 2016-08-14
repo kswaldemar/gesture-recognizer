@@ -37,7 +37,7 @@ mkdir build && cd build
 qmake ..
 make
 ```
-Then launch interface in `gui/gesture-recognition`
+Then launch interface in `gui/gesture-recognizer`
 ### Documentation
 
 To build doxygen documentation do in project source root:
